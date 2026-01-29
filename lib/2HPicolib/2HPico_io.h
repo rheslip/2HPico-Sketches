@@ -31,10 +31,12 @@
 #ifndef IO_H_
 #define IO_H_
 
-// I2S pins for DAC
+// I2S pins for ADC and DAC
+#define MCLK 11
 #define BCLK 12
 #define WS 13  // this will always be 1 pin above BCLK - can't change it
-#define I2S_DATA 14
+#define I2S_DATA 14  // Out of Pico to DAC
+#define I2S_DATAIN 15  // into Pico from ADC
 
 #define CPU_USE 8 // unused GPIO shows core 1 processor usage
 
