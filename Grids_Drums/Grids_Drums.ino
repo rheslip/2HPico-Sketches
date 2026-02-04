@@ -21,11 +21,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// R Heslip Drum Machine app for new 2HP hardware Feb 2026
+// R Heslip Drum Machine app for 2HPico eurack module Feb 2026
 // based on Mutable Instruments Grids
 // sequencer is derived from Phaserville DrumMap applet, which is derived from Grids
-// drum sample player is my stuff - same code and wav to C header tool used in a lot of other projects
+// sample player is same code and wav to C header tool used in a lot of my other projects
 
+// top jack - clock input - clocks on +ve edge
+// middle jack - reset input to sync with other sequencers - resets on +ve edge
+// bottom jack - audio out
+
+// page 1 parameters - Red LED
+// Pot 1 - Drum Map X
+// pot 2 - Drum Map Y
+// pot 3 - Chaos (adds variations)
+// pot 4 - Probability of a random sample on channel 4
+
+// page 2 parameters - Green LED
+// Pot 1 - Channel 1 Fill
+// pot 2 - Channel 2 Fill
+// pot 3 - Channel 3 Fill
+// pot 4 - Channel 4 Fill
+
+// page 3 parameters Aqua LED
+// Pot 1 - Channel 1 Sample
+// Pot 2 - Channel 2 Sample
+// Pot 3 - Channel 3 Sample
+// Pot 4 - Channel 4 Sample
 
 #include "2HPico.h"
 #include <I2S.h>
@@ -40,6 +61,7 @@
 #endif
 
 #define MONITOR_CPU1  // define to enable 2nd core monitoring
+//#define DEBUG   // comment out to remove debug code
 
 //#define SAMPLERATE 11025 
 #define SAMPLERATE 22050  // saves CPU cycles
@@ -56,8 +78,6 @@
 Adafruit_NeoPixel LEDS(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 I2S DAC(OUTPUT);  // 
-
-#define DEBUG   // comment out to remove debug code
 
 // constants for integer to float and float to integer conversion
 #define MULT_16 2147483647
@@ -79,23 +99,16 @@ int16_t last_ch_sample=3; // saves sample setting of ch 3 when random voice is e
 int16_t last_ch_randomness=0;
 
 #define CLOCKIN TRIGGER  // top jack is clock
-
-#define CV1IN_VOLT 580.6  // a/d count per volt - trim for V/octave
-#define CV1IN AIN0   // CV1 input - top jack
-#define CV2IN AIN1   // CV2 input - top jack
-#define CV_AVERAGING 10  // A/D average over this many readings
-#define CVOUT_VOLT 6554 // D/A count per volt - nominally +-5v range for -+32767 DAC values- trim for V/octave out
-#define CVOUTMIN -2*CVOUT_VOLT  // lowest output CV ie MIDI note 0
-
-
+#define RESETIN AIN1   // middle jack used to reset the sequencer
 
 bool clocked=0;  // keeps track of clock state
+bool resetedge=0;  // keeps track of reset state
 bool button=0;  // keeps track of button state
 
 #define NUMUISTATES 3
 enum UIstates {SET1,SET2,SET3} ;
 uint8_t UIstate=SET1;
-uint32_t buttontimer,clocktimer,clockperiod,clockdebouncetimer,ledtimer;
+uint32_t buttontimer,clocktimer,clockdebouncetimer,resetdebouncetimer,ledtimer;
 
 #define LEDOFF 25 // LED trigger flash time 
 
@@ -130,11 +143,11 @@ struct voice_t {
 //#include "808samples/samples.h" // 808 sounds
 //#include "Angular_Jungle_Set/samples.h"   // Jungle soundfont set - great!
 //#include "Angular_Techno_Set/samples.h"   // Techno
-//#include "Acoustic3/samples.h"   // acoustic drums - had to use UF2 mode to flash this one - don't know why
+#include "Acoustic3/samples.h"   // acoustic drums 
 //#include "Pico_kit/samples.h"   // assorted samples
 //#include "testkit/samples.h"   // assorted samples
 //#include "EDM_kits/samples.h"   // Techno, Pop, Trap, House
-#include "House/samples.h"   // House
+//#include "House/samples.h"   // House 808 909 style kit
 
 #define NUM_SAMPLES (sizeof(sample)/sizeof(sample_t))
 
@@ -176,7 +189,8 @@ void setup() {
   pinMode(CPU_USE,OUTPUT); // hi = CPU busy
 #endif 
 
-  pinMode(TRIGGER,INPUT_PULLUP); // gate/trigger in
+  pinMode(CLOCKIN,INPUT); // gate/trigger in used for clock
+  pinMode(RESETIN,INPUT); // 2nd jack in used for reset
   pinMode(BUTTON1,INPUT_PULLUP); // button in
   pinMode(MUXCTL,OUTPUT);  // analog switch mux
 
@@ -249,7 +263,7 @@ void loop() {
       if (!potlock[3]) fill[3]=map(pot[3],0,AD_RANGE-1,0,MAX_VAL); 
       break;
     case SET3:
-      LEDS.setPixelColor(0, ORANGE);
+      LEDS.setPixelColor(0, AQUA);
       if (!potlock[0]) voice[0].sample=map(pot[0],0,AD_RANGE-1,0,NUM_SAMPLES-1); // top pot on the panel
       if (!potlock[1]) voice[1].sample=map(pot[1],0,AD_RANGE-1,0,NUM_SAMPLES-1);  // 
       if (!potlock[2]) voice[2].sample=map(pot[2],0,AD_RANGE-1,0,NUM_SAMPLES-1);
@@ -257,6 +271,17 @@ void loop() {
       break;
     default:
       break;
+  }
+
+  if (!digitalRead(RESETIN))  { // look for reset - reset input is inverted
+    if (((millis()-resetdebouncetimer) > CLOCK_DEBOUNCE) && !resetedge) {  // true on rising edge
+      resetedge=1;
+      step=0; // reset the sequencer
+    }
+  }
+  else {
+    resetedge=0;
+    resetdebouncetimer=millis();
   }
 
 
@@ -302,6 +327,7 @@ void loop() {
       clocked=0;
       clockdebouncetimer=millis();
   }
+
 
   if ((millis()-ledtimer) > LEDOFF ) LEDS.show();  // update LEDs only if not doing off flash
 }
