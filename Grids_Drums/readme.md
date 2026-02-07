@@ -6,8 +6,10 @@ The sketch is set up for 22khz mono samples to save memory since the Waveshare P
 
 There is a tool in the resources directory of this archive for easily making new drum kits. Make a subdirectory in your sketch folder, drop .wav file samples in it and put a copy of the wav2header22khz.exe tool in it as well. Click on the .exe file and it will convert the .wav files into the required header files. In your sketch, include the file "samples.h" from the directory you created. It has to be included in the same place in the source code as the example kits - NOT at the top of the sketch. You can only have one set of samples included at a time.
 
-There are two drum maps included: 
+There are three drum maps included: 
 
 grids4ch_resources.h which is the Mutable Instruments drum map expanded to four channels
 
 grids4ch_resources2.h which is the drum map from the Phazerville suite for Ornament and Crime also expanded to four channels. It has a different set of drum sequences.
+
+testmap1.h is a drum map I created from EDM style MIDI drum files using the MIDI2drums.py utility found in the resources directory
