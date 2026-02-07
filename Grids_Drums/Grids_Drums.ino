@@ -1,6 +1,7 @@
 
 // Copyright (c) 2021, Benjamin Rosenbach
-//
+// Copyright (c) 2026, Rich Heslip
+
 // Based on Grids pattern generator, Copyright 2011 Émilie Gillet.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,12 +26,18 @@
 // based on Mutable Instruments Grids
 // sequencer is derived from Phaserville DrumMap applet, which is derived from Grids
 // sample player is same code and wav to C header tool used in a lot of my other projects
+// Feb 7/26 - added no interpolation and manual reset features
+
 
 // top jack - clock input - clocks on +ve edge
 // middle jack - reset input to sync with other sequencers - resets on +ve edge
 // bottom jack - audio out
 
-// page 1 parameters - Red LED
+// button - click to advance to next page
+// button - double click on page 1 to toggle drum map interpolation off/on
+// button - hold to manually reset to first step
+
+// page 1 parameters - Red LED if interpolation is on, Orange LED is interpolation is off
 // Pot 1 - Drum Map X
 // pot 2 - Drum Map Y
 // pot 3 - Chaos (adds variations)
@@ -52,9 +59,9 @@
 #include <I2S.h>
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
-//#include "grids4ch_resources.h" // grids map for 4 channels
-//#include "grids4ch_resources2.h" // 4 channel map - alternate patterns from Phazerville
-#include "testmap1.h" // 4 channel map - created from MIDI drum files
+//#include "grids4ch_resources.h" // 4 channels grids map
+#include "grids4ch_resources2.h" // 4 channel map - alternate patterns from Phazerville
+//#include "testmap1.h" // 4 channel map - created from MIDI drum files
 #include "pico/multicore.h"
 
 #ifndef _BV
@@ -75,6 +82,7 @@
 #define ORANGE (RED|GREEN)
 #define VIOLET (RED|BLUE)
 #define AQUA (GREEN|BLUE)
+
 
 Adafruit_NeoPixel LEDS(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
@@ -104,12 +112,39 @@ int16_t last_ch_randomness=0;
 
 bool clocked=0;  // keeps track of clock state
 bool resetedge=0;  // keeps track of reset state
-bool button=0;  // keeps track of button state
+bool interpolate=1;  // true to interpolate drum patterns
+
+// clickbutton library is used to detect clicks, doubleclicks, holds etc
+ClickButton button1 (BUTTON1);
+#define BUTTON_TIMER_MICROS 10000 // 100hz for button
+
+// RP2040 timer code from https://github.com/raspberrypi/pico-examples/blob/master/timer/timer_lowlevel/timer_lowlevel.c
+// Use alarm 0
+#define ALARM_NUM 0
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
+
+static void alarm_in_us(uint32_t delay_us) {
+  hw_set_bits(&timer_hw->inte, 1u << ALARM_NUM);
+  irq_set_exclusive_handler(ALARM_IRQ, alarm_irq);
+  irq_set_enabled(ALARM_IRQ, true);
+  alarm_in_us_arm(delay_us);
+}
+
+static void alarm_in_us_arm(uint32_t delay_us) {
+  uint64_t target = timer_hw->timerawl + delay_us;
+  timer_hw->alarm[ALARM_NUM] = (uint32_t) target;
+}
+
+static void alarm_irq(void) {
+  button1.service();    // check the button input
+  hw_clear_bits(&timer_hw->intr, 1u << ALARM_NUM); // clear IRQ flag
+  alarm_in_us_arm(BUTTON_TIMER_MICROS);  // reschedule interrupt
+}
 
 #define NUMUISTATES 3
 enum UIstates {SET1,SET2,SET3} ;
 uint8_t UIstate=SET1;
-uint32_t buttontimer,clocktimer,clockdebouncetimer,resetdebouncetimer,ledtimer;
+uint32_t clocktimer,clockdebouncetimer,resetdebouncetimer,ledtimer;
 
 #define LEDOFF 25 // LED trigger flash time 
 
@@ -152,6 +187,7 @@ struct voice_t {
 
 #define NUM_SAMPLES (sizeof(sample)/sizeof(sample_t))
 
+
 // Phaserville code, more or less lifted from Grids
 
 uint8_t ReadDrumMap(uint8_t step, uint8_t part, uint8_t x, uint8_t y) {
@@ -173,6 +209,18 @@ uint8_t ReadDrumMap(uint8_t step, uint8_t part, uint8_t x, uint8_t y) {
   uint8_t ab_fade = (b * quad_x + a * (255 - quad_x)) >> 8;
   uint8_t cd_fade = (d * quad_x + c * (255 - quad_x)) >> 8;
   return (cd_fade * quad_y + ab_fade * (255 - quad_y)) >> 8;
+}
+
+
+// read drum pattern without interpolation between adjacent patterns
+
+uint8_t ReadDrumPattern(uint8_t step, uint8_t part, uint8_t x, uint8_t y) {
+  uint8_t i = map(x,0,MAX_VAL,0,4);
+  uint8_t j = map(y,0,MAX_VAL,0,4);
+  const uint8_t* a_map = grids::drum_map[i][j];
+  uint8_t offset = (part * MAX_STEPS) + step;
+  uint8_t a = a_map[offset];
+  return a;
 }
 
 
@@ -216,6 +264,8 @@ void setup() {
 	DAC.setLSBJFormat();  // needed for PT8211 which has funny timing
 	DAC.begin(SAMPLERATE);
 
+  alarm_in_us(BUTTON_TIMER_MICROS); // start the button IRQ
+
 #ifdef DEBUG  
   Serial.println("finished setup");  
 #endif
@@ -226,18 +276,21 @@ void setup() {
 
 void loop() {
 
-  if (!digitalRead(BUTTON1)) {
-    if (((millis()-buttontimer) > DEBOUNCE) && !button) {  // if button pressed advance to next parameter set
-      button=1;  
+  ClickButton::Button b=button1.getButton();
+    switch (b) {
+    case ClickButton::Clicked:
       ++UIstate;
       if (UIstate >= NUMUISTATES) UIstate=SET1;
       lockpots();
-  //    Serial.printf("state %d %d\n",UIstate, sizeof(UIstates)); 
-    }
-  }
-  else {
-    buttontimer=millis();
-    button=0;
+      break;
+    case ClickButton::DoubleClicked:
+      if (UIstate==SET1) interpolate=!interpolate; // flips pattern interpolation on and off
+      break;
+    case ClickButton::Held:  // hold to reset sequencer
+      step=0;
+      break;
+    default:
+      break;
   }
 
   samplepots();
@@ -250,7 +303,8 @@ void loop() {
 // 
   switch (UIstate) {
     case SET1:
-      LEDS.setPixelColor(0, RED); 
+      if (interpolate) LEDS.setPixelColor(0, RED); 
+      else LEDS.setPixelColor(0, ORANGE);
       if (!potlock[0]) x=map(pot[0],0,AD_RANGE-1,0,MAX_VAL); // top pot on the panel
       if (!potlock[1]) y=map(pot[1],0,AD_RANGE-1,0,MAX_VAL);  // 
       if (!potlock[2]) chaos=map(pot[2],0,AD_RANGE-1,0,MAX_VAL);
@@ -303,7 +357,9 @@ void loop() {
         // accent on ch 1 will be for whatever part ch 0 is set to
         //uint8_t part = (ch == 1 && mode[ch] == 3) ? mode[0] : mode[ch];
         uint8_t part = ch;
-        int level = ReadDrumMap(step, part, x, y);
+        int level;
+        if (interpolate) level = ReadDrumMap(step, part, x, y);
+        else level=ReadDrumPattern(step, part, x, y);
         level = constrain(level + randomness[part], 0, MAX_VAL);
         // use ch 0 fill if ch 1 is in accent mode
         //uint8_t threshold = (ch == 1 && mode[ch] == 3) ? ~_fill[0] : ~_fill[ch];

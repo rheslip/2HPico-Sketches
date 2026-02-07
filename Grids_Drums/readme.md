@@ -13,3 +13,9 @@ grids4ch_resources.h which is the Mutable Instruments drum map expanded to four 
 grids4ch_resources2.h which is the drum map from the Phazerville suite for Ornament and Crime also expanded to four channels. It has a different set of drum sequences.
 
 testmap1.h is a drum map I created from EDM style MIDI drum files using the MIDI2drums.py utility found in the resources directory
+
+Feb 7/2026 
+
+Added no interpolation feature - double clicking the button on the RED page will turn the LED Orange which indicates drum map interpolation is turned off. In this case you will have 25 drum patterns with no "morphing" between patterns. The X and Y pots work the same way but they have only 5 pattern selections each vs continuous in the interpolation mode. This is useful if you want to select a specific pattern or hear what the pattern sounds like with no influence from the adjacent patterns in the drum map.
+
+Added manual reset feature - hold the button to force the sequencer to step 0. Useful to manually sync to other sequencers or to get a roll effect from whatever is on the first drum sequencer step.
