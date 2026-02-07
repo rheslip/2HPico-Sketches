@@ -53,7 +53,8 @@
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
 //#include "grids4ch_resources.h" // grids map for 4 channels
-#include "grids4ch_resources2.h" // 4 channel map - alternate patterns from Phazerville
+//#include "grids4ch_resources2.h" // 4 channel map - alternate patterns from Phazerville
+#include "testmap1.h" // 4 channel map - created from MIDI drum files
 #include "pico/multicore.h"
 
 #ifndef _BV
@@ -143,11 +144,11 @@ struct voice_t {
 //#include "808samples/samples.h" // 808 sounds
 //#include "Angular_Jungle_Set/samples.h"   // Jungle soundfont set - great!
 //#include "Angular_Techno_Set/samples.h"   // Techno
-#include "Acoustic3/samples.h"   // acoustic drums 
+//#include "Acoustic3/samples.h"   // acoustic drums 
 //#include "Pico_kit/samples.h"   // assorted samples
 //#include "testkit/samples.h"   // assorted samples
 //#include "EDM_kits/samples.h"   // Techno, Pop, Trap, House
-//#include "House/samples.h"   // House 808 909 style kit
+#include "House/samples.h"   // House 808 909 style kit
 
 #define NUM_SAMPLES (sizeof(sample)/sizeof(sample_t))
 
