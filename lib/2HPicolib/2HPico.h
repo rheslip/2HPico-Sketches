@@ -35,10 +35,12 @@
 #define NUMPIXELS 1 // 
 #define RED 0x1f0000  // only using 5 bits to keep LEDs from getting too bright
 #define GREEN 0x001f00
-#define BLUE 0x00001f
-#define ORANGE (RED|GREEN)
+#define BLUE 0x00041f
+#define YELLOW (RED|GREEN)
+#define ORANGE 0x1f0800 
 #define VIOLET (RED|BLUE)
 #define AQUA (GREEN|BLUE)
+#define WHITE (RED|GREEN|BLUE)
 
 // constants for integer to float and float to integer conversion
 #define MULT_16 2147483647
