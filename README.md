@@ -14,5 +14,7 @@ Adafruit Neopixel library
 
 Some sketches use my fork of ElectroSmith's DaisySP library https://github.com/rheslip/DaisySP_Teensy
 
-Plaits sketch requires PLAITS and STMLIB included in this repository
+Plaits sketch requires PLAITS and STMLIB libraries included in this repository
+
+PlaitsFM sketch requires 6opfm and STMLIB libraries included in this repository
 
