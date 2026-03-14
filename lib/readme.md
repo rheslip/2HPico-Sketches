@@ -13,3 +13,5 @@ You will need copies of PLAITS and STMLIB in your Arduino/Libraries folder in or
 Feb 19/2026 - added 6opFM lib which is the Plaits library stripped down for just 6opFM. Moved the patch bank files from resources.h to the sketch folder
 
 You will need copies of 6opFM and STMLIB in your Arduino/Libraries folder in order to compile the PlaitsFM code
+
+March 14/2026 - added Synth_Braids library which originated at https://codeberg.org/positionhigh/MicroDexed-touch/src/branch/main/third-party. Required for Pico_Audio_Braids sketch

@@ -18,3 +18,7 @@ Plaits sketch requires PLAITS and STMLIB libraries included in this repository
 
 PlaitsFM sketch requires 6opfm and STMLIB libraries included in this repository
 
+Pico_Audio_Braids requires the pico-audio library from my main repository https://github.com/rheslip/pico-audio and the Synth_Braids library in this repository
+
+	Synth_Braids library from https://codeberg.org/positionhigh/MicroDexed-touch/src/branch/main/third-party
+
