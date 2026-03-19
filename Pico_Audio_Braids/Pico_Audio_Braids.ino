@@ -25,7 +25,7 @@
 // -----------------------------------------------------------------------------
 //
 /*
- Mutable Instruments Braids for 2HPico March 2026
+ Mutable Instruments Braids for 2HPico March 2026 
 
  Braids using the Pico-Audio framework which is a port of PJRC's Teensy Audio framework
  the Braids code was ported to the Teensy Audio framework by the MicroDexed project - at least thats where I found it
@@ -73,6 +73,8 @@ Fourth pot - Release
 
 Adafruit_NeoPixel LEDS(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
+#define GATE TRIGGER    // semantics - ADSR is generally used with a gate signal
+
 #define NUMUISTATES 2
 enum UIstates {SET1,SET2} ;
 uint8_t UIstate=SET1;
@@ -82,7 +84,8 @@ bool button=0;
 int16_t shape;
 
 #define DEBOUNCE 10
-uint32_t buttontimer,trigtimer,parameterupdate;
+#define GATE_DELAY 5
+uint32_t buttontimer,gatetimer,parameterupdate;
 
 #define CVIN_VOLT 580.6  // a/d count per volt - **** adjust this value to calibrate V/octave input
 int16_t minfreq=10;
@@ -197,8 +200,10 @@ void loop1() {
     }
   }
  
-  if (!digitalRead(TRIGGER)) {
-    if (((millis()-trigtimer) > TRIG_DEBOUNCE) && !trigger) {  // trigger detection
+
+
+  if (!digitalRead(GATE)) {
+    if (((millis()-gatetimer) > GATE_DELAY) && !trigger) {  // trigger detection
       trigger=1; 
       float cv=(AD_RANGE-sampleCV2()); // CV in is inverted 
     // pitch seems to be in MIDI notes with a 7 bit fractional part
@@ -207,7 +212,7 @@ void loop1() {
     }
   }
   else {
-    trigtimer=millis();
+    gatetimer=millis();
     if (trigger) adsr.noteOff();  // gate/trigger just went low
     trigger=0;   
   }
