@@ -10,5 +10,7 @@ Dependencies:
 
 Adafruit Neopixel library
 
+DaisySP library adapted to Arduino https://github.com/rheslip/DaisySP_Teensy
+
 BRAIDS and STMLIB libraries included in this repository - slightly tweeked versions of https://github.com/poetaster/arduinoMI
 
