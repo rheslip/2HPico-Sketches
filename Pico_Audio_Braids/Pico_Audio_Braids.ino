@@ -29,7 +29,15 @@
 
  Braids using the Pico-Audio framework which is a port of PJRC's Teensy Audio framework
  the Braids code was ported to the Teensy Audio framework by the MicroDexed project - at least thats where I found it
+ 
+ Notes - as of March 2026 the MicroDexed Braids library doesn't seem to be stable - this is mentioned in the library notes. Some of the models don't work correctly and there is some audio breakup now and then.
+ This sketch is still a useful example of how to use the Pico-audio framework on 2HPico
+ at this point its better use the ArduinoMI Braids sketch - it works well
+
  runs OK at 150 Mhz - CPU utilization is quite low
+
+March 20/2026 added autolock of shape parameter to minimize jumping between two patches
+if you get crackling audio its because braids is jumping between two patches. tweek the model knob slightly till its stable. It will lock in after 1 second of being stable
 
 Button - press to move between parameter pages
 
@@ -81,11 +89,13 @@ uint8_t UIstate=SET1;
 
 bool trigger=0;
 bool button=0;
-int16_t shape;
+int16_t shape=0;
+int16_t lastshape=0;
 
 #define DEBOUNCE 10
 #define GATE_DELAY 5
-uint32_t buttontimer,gatetimer,parameterupdate;
+#define POTAUTOLOCK 1000 // lock pot 0 (shape) setting in after its been stable for this long
+uint32_t buttontimer,gatetimer,parameterupdate,pot0timer;
 
 #define CVIN_VOLT 580.6  // a/d count per volt - **** adjust this value to calibrate V/octave input
 int16_t minfreq=10;
@@ -180,8 +190,11 @@ void loop1() {
         case SET1:
           LEDS.setPixelColor(0, RED); 
           if (!potlock[0]) {
-            shape=(map(pot[0],0,AD_RANGE-1,0,41)); //
+            lastshape=shape;
+            shape=(map(pot[0],0,AD_RANGE-1,0,braids::MACRO_OSC_SHAPE_LAST-1)); //
             br.set_braids_shape(shape); //
+            if (shape!=lastshape) pot0timer=millis(); // parameter is still changing so delay locking
+            if ((millis()-pot0timer) > POTAUTOLOCK) potlock[0]=1; // its been stable for a while so lock it
           }
           if (!potlock[1]) br.set_braids_timbre(map(pot[1],0,AD_RANGE-1,0,32767)); //
           if (!potlock[2]) br.set_braids_color(map(pot[2],0,AD_RANGE-1,0,32767)); //

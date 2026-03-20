@@ -20,14 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// ** Mutable Instrument Braidss for 2HPico **
+ ** Mutable Instrument Braids for 2HPico **
 
-//
-// R Heslip March  2026
-//
-//
-** Notes: if you get crackling audio its because braids is jumping between two patches. tweek the model knob slightly till its stable
-the other way to fix this is to press the button. This switches parameter pages and locks the knob settings. The patch will be "locked" until you move the model knob again.
+This version uses the ArduinoMI library for Braids and DaisySP for the ADSR
+
+ R Heslip March  2026
+
+March 20/2026 added autolock of shape parameter to minimize jumping between two patches
+
+Note: if you get crackling audio its because braids is jumping between two patches. tweek the model knob slightly till its stable. It will lock in after 1 second of being stable
+
+Runs very well at 150Mhz - lots of CPU left for more signal processing
 
 top jack - Trigger input 
 middle jack - V/Octave CV input - 2HPico must be jumpered for CV in
@@ -36,7 +39,7 @@ bottom jack - audio out
 button - click to advance to next page
 
 page 1 parameters - RED
-Top pot - Braids model - there are 43 models so this can be tricky to dial in. once you have it press the button which will lock that setting in until you change it
+Top pot - Braids model - there are 43 models so this can be tricky to dial in. 
 
 Second pot - Timbre
 
@@ -79,14 +82,16 @@ Fourth pot - Release
 
 Adafruit_NeoPixel LEDS(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
-uint32_t buttontimer,parameterupdate,gatetimer;  // timers
+uint32_t buttontimer,parameterupdate,gatetimer,pot0timer;  // timers
 
 bool button,gate;
 int16_t shape=0;
+int16_t lastshape=0;
 int16_t timbre=0;
 int16_t color=0;
 
 #define GATE_DELAY 5  // gate debounce time + delay to allow CV to settle
+#define POTAUTOLOCK 1000 // lock pot 0 (shape) setting in after its been stable for this long
 
 #define PT8211    // define for 2HPico to set up I2S for PT8211 DAC
 I2S DAC(OUTPUT);  // 
@@ -198,8 +203,11 @@ void loop() {
         case SET1:
           LEDS.setPixelColor(0, RED); 
           if (!potlock[0]) {
+            lastshape=shape;
             shape=(map(pot[0],0,AD_RANGE-1,0,braids::MACRO_OSC_SHAPE_LAST-1)); //
             voices[0].osc->set_shape((braids::MacroOscillatorShape)shape);
+            if (shape!=lastshape) pot0timer=millis(); // parameter is still changing so delay locking
+            if ((millis()-pot0timer) > POTAUTOLOCK) potlock[0]=1; // its been stable for a while so lock it
           }
           if (!potlock[1]) {
             timbre=(map(pot[1],0,AD_RANGE-1,0,32767)); //
@@ -222,6 +230,7 @@ void loop() {
         default:
           break;
     }
+   // Serial.printf("Shape %d lock %d\n",shape,potlock[0]);
   }
 
 
