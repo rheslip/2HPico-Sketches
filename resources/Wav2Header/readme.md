@@ -19,5 +19,7 @@ Note also that the tool will put your samples in alphabetical order to facilitat
 Oct 2023 - I used this tool for a couple of RP2040 Pico projects at 22khz and 44khz so there are two versions of the source. Could have added a command line switch but Windows 10 makes it so hard to run command line anything this is probably easier. 
 Put the appropriate .exe file in a subdirectory with the samples you want converted to headers, click on the .exe and the magic happens.
 
+April 2026 - added assignment of MIDI note from sample name. e.g. a sample named "36bassdrum.wav" will be assigned MIDI note 36 which is the general MIDI key# for Bass Drum. Added specifically for the 2HPico general MIDI drum machine.
+
 R Heslip Feb 2019
 

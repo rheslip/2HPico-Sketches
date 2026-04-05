@@ -28,6 +28,7 @@
 // header files are formatted specifically for my Motivation Radio drum machine/sample player sketch
 // March 28 2023 - modded compile instructions above for windows 10 which only supports 64 bits
 // Oct 2023 - made two source files, one for 22khz conversion one for 44khz conversion
+// April 4/2026 - added assignment of MIDI note number from start of sample name
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -289,7 +290,7 @@ int main(int argc, char **argv)
 	struct stat s;
 	FILE *fp, *outc=NULL, *outh=NULL,*outinc=NULL;
 	char buf[128];
-	int midinote=35, len;
+	int midinote, len;
 
 
 	dir = opendir(".");
@@ -341,11 +342,13 @@ int main(int argc, char **argv)
 		
 		fprintf(outinc, "#include \"%s.h\"\n", samplename); // build the sample include file
 		
+		if (!sscanf(filename, "%d", &midinote)) midinote=0; // try to figure out the MIDI note number from the filename
+		
 		// build the sampledef structure initializers
 		fprintf(outh, "\t%s,\t// pointer to sample array\n", samplename); //
 		fprintf(outh, "\t%s_SIZE,\t// size of the sample array\n", samplename); // 
 		fprintf(outh, "\t%s_SIZE,\t//sampleindex. if at end of sample array sound is not playing\n", samplename); // 
-		fprintf(outh, "\t%d,\t// MIDI note on that plays this sample\n", midinote++); // 
+		fprintf(outh, "\t%d,\t// MIDI note on that plays this sample\n", midinote); // 
 		fprintf(outh, "\t%d,\t// play volume 0-127\n", 127); // 
 		fprintf(outh, "\t\"%s\",\t// sample name\n\n", samplename); // 
 		
