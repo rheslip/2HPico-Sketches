@@ -1,6 +1,6 @@
 # SMF-Drums Standard MIDI file drum machine for 2HPico
 
-April 2026 - still has sync problems to fix
+Updated April 9 2026 - clock sync is much better but still seems off with some MIDI files
 
 Notes:
 
