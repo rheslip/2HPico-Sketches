@@ -20,7 +20,8 @@
 // SOFTWARE.
 /*
  R Heslip Drum Machine app for 2HPico eurack module March 2026
- Plays standard MIDI file drum patterns.
+ Plays standard MIDI file drum patterns. The sketch is set up for standard MIDI files with GM mapped drums which is generally how MIDI drum files are set up. 
+ It will work with non-GM mapping but it might be a little harder to map sounds to the individual drum tracks by ear.
 
 Notes:
 You MUST compile this sketch with space allocated for a file system in the /Tools/Flash Size Arduino menu. I suggest 512k because all the MIDI files get loaded into RAM and the Pico 2 only has 520kb RAM.
@@ -32,11 +33,15 @@ You should eject the drive when finished to ensure the file system does not get 
 A fast flashing LED on power up means there was a problem with the file system or one of the files.
 I strongly suggest you put only a few patterns in each bank until you get used to mapping samples to MIDI tracks by ear.
 
-Drum sounds - This one works the same way as the Grids sketch - put your drum samples in a subfolder of the sketch and run the wav2header22khz utility which creates a header file which you include in the sketch.
-Wave2header22khz sorts the samples in alphabetical order. Its very helpful to have a silent sample and make sure its the first sample alphabetically. This allows tracks to be muted by turning the sample knob fully ccw.
-Its also handy to group sounds alphabetically. This makes finding the sounds for each track easier.
+Drum sounds:
+This one works the same way as the Grids sketch - put your drum samples in a subfolder of the sketch and run the wav2header22khz utility which creates a header file which you include in the sketch. 
+Wave2header22khz sorts the samples in alphabetical order. Its very helpful to have a silent sample and name it so its the first sample e.g. "00silence.wav". 
+This allows tracks to be muted by turning the sample knob fully ccw. You should also prefix the sample filenames with the GM note # of that sound e.g. "36Bassdrum.wav". 
+The sketch will auto assign voices by mapping the GM note in the MIDI file to a sample with the same GM note number in its prefix. 
+You can have saveral samples with the same GM note #. In this case it will assign the alphabetically first sample, which you can override by using the knobs.
+If none of your sample names match the GM notes in the MIDI file it will map that GM note to the first sample which will be silence if you follow the suggested naming prefix. 
+You can assign any voice manually by using the knobs - autoassignment provides a fast way to preview MIDI files without a lot of knob twisting.
 
-The sketch is set up for standard MIDI files with GM mapped drums. It will still work with non-GM mapping but it might be a little harder to map sounds to the individual drum tracks.
 
  top jack - clock input - clocks on +ve edge. clock must be at 1/16 note rate ie 16 clocks per bar for 4/4 time signature.
  middle jack - reset input to sync with other sequencers - resets on +ve edge

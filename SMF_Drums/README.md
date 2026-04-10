@@ -24,7 +24,7 @@ Drum sounds:
 This one works the same way as the Grids sketch - put your drum samples in a subfolder of the sketch and run the wav2header22khz utility which creates a header file which you include in the sketch.
 Wave2header22khz sorts the samples in alphabetical order. Its very helpful to have a silent sample and make sure its the first sample e.g. "00silence.wav". This allows tracks to be muted by turning the sample knob fully ccw.
 You should also prefix the filenames with the GM note # of that sound e.g. "36Bassdrum.wav". The sketch will auto assign voices by mapping the GM note in the MIDI file to a sample with the same GM note number. 
-You can have saveral samples with the same note # - it will assign the alphabetically first sample. If none of your sample names match the GM notes in the MIDI file it will map the GM note to the first sample - which will be silence if you follow the suggested naming prefix. You can assign these voices manually by using the knobs.
+You can have saveral samples with the same note # - it will assign the alphabetically first sample. If none of your sample names match the GM notes in the MIDI file it will map the GM note to the first sample - which will be silence if you follow the suggested naming prefix. You can assign any voice manually by using the knobs.
 
 You need the updated version of wav2header22khz in this archive /resources which now supports assigning MIDI note number from the filename prefix. 
 
