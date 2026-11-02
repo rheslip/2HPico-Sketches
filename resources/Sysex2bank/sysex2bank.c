@@ -46,7 +46,7 @@ void die(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	fprintf(stderr, "wav2sketch: ");
+	fprintf(stderr, "sysex2bank: ");
 	vfprintf(stderr, format, args);
 	fprintf(stderr, "\n");
 	exit(1);
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 	uint8_t header[6];
 	uint8_t buffer[129];
 	int filecount=0;
+	char filenames[8][80];
 
 	dir = opendir(".");
 	if (!dir) die("unable to open directory");
@@ -112,8 +113,13 @@ int main(int argc, char **argv)
 		}
 		fprintf(outh, "\n};\n\n"); // 		
 		fclose(fp);
+		strcpy(&filenames[filecount][0],filename); // save the filename
 		if (++filecount >=8) break;
+
 	}
+	fprintf(outh, "const char * syx_banknames[] = {");
+	for (int i=0;i<8;++i) fprintf(outh, "\"%s\",",&filenames[i][0]);
+	fprintf(outh, "};\n\n");
 	fprintf(outh, "}; // namespace plaits\n"); // end sampledefs.h initializer section
 	fclose(outh);
 	printf("%d files processed\n",filecount);

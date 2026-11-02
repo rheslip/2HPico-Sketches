@@ -2596,4 +2596,6 @@ const uint8_t syx_bank_7[] = {
 	
 };
 
+const char * syx_banknames[] = {"ROM1A.SYX","ROM1B.SYX","ROM2A.SYX","ROM2B.SYX","ROM3A.SYX","ROM3B.SYX","ROM4A.SYX","ROM4B.SYX",};
+
 }; // namespace plaits

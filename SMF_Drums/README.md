@@ -6,14 +6,14 @@ Notes:
 
 The sketch is set up for standard MIDI files with GM mapped drums. It will still work with non-GM mapping but it might be a little harder to map sample sounds to the individual drum tracks.
 
-You MUST compile this sketch with space allocated for a file system in the /Tools/Flash Size Arduino menu. I suggest 512k because all the MIDI files get loaded into RAM and the Pico 2 only has 520kb RAM.
+You MUST compile this sketch with space allocated for a file system in the /Tools/Flash Size Arduino menu. I suggest 256k because all the MIDI files get loaded into RAM and the Pico 2 only has 520kb RAM.
 
 To load your MIDI files, hold the button while powering up. The LED will turn purple. Connect the Pico's USB port to a host computer it will appear as a flash drive. 
 
 If this is the first time you have connected you should format the drive. You should only have to format the drive once - even if you change the code the flash drive should still be intact.
 
 You MUST create four bank directories named "bank1", "bank2", "bank3" and "bank4". Drag and drop your MIDI files into these bank folders. There is a maximum of 32 MIDI files per bank. Any more than 32 files per bank will be ignored.
-You should eject the drive when finished to ensure the file system does not get corrupted. Power the module off and back on for normal operation.
+**IMPORTANT** You should eject the drive when finished to ensure the file system does not get corrupted. Power the module off and back on for normal operation.
 
 A fast flashing LED on power up means there was a problem with the file system or one of the files.
 

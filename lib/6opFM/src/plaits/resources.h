@@ -62,6 +62,7 @@ extern const uint8_t syx_bank_4[];
 extern const uint8_t syx_bank_5[];
 extern const uint8_t syx_bank_6[];
 extern const uint8_t syx_bank_7[];
+extern const char * syx_banknames[];
 extern const float lut_sine[];
 extern const float lut_fm_frequency_quantizer[];
 extern const float lut_fold[];
